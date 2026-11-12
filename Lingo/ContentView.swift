@@ -22,7 +22,6 @@ struct ContentView: View {
             .navigationDestination(for: Route.self) { route in
                 switch route {
                 case .home:
-                    // TODO: ekran 02 Home – do zaimplementowania w kolejnym kroku.
                     Text("Home")
                 }
             }
