@@ -8,14 +8,25 @@
 import SwiftUI
 
 struct ContentView: View {
+    @State private var path: [Route] = []
+
+    enum Route: Hashable {
+        case home
+    }
+
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, wadwadaw!")
+        NavigationStack(path: $path) {
+            OnboardingView {
+                path.append(.home)
+            }
+            .navigationDestination(for: Route.self) { route in
+                switch route {
+                case .home:
+                    // TODO: ekran 02 Home – do zaimplementowania w kolejnym kroku.
+                    Text("Home")
+                }
+            }
         }
-        .padding()
     }
 }
 
