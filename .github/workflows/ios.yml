@@ -16,6 +16,12 @@ jobs:
       - name: Wybierz Xcode
         run: sudo xcode-select -s /Applications/Xcode_26.6.app
 
+      # Projekt jest zapisany w formacie Xcode 27 (objectVersion = 110), którego
+      # Xcode 26.x nie otworzy. Obniżamy wersję formatu tylko w kopii na runnerze.
+      # Do usunięcia, gdy runnery dostaną Xcode 27.
+      - name: Obniż format projektu do Xcode 26
+        run: sed -i '' 's/objectVersion = 110;/objectVersion = 77;/' Lingo.xcodeproj/project.pbxproj
+
       - name: Informacje o środowisku
         run: |
           xcodebuild -version
