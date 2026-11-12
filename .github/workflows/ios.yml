@@ -1,0 +1,47 @@
+name: iOS build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-26
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Wybierz Xcode
+        run: sudo xcode-select -s /Applications/Xcode_26.6.app
+
+      - name: Informacje o środowisku
+        run: |
+          xcodebuild -version
+          xcodebuild -list -project Lingo.xcodeproj
+          xcrun simctl list devices available
+
+      # Projekt ma IPHONEOS_DEPLOYMENT_TARGET = 27.0, a runnery GitHuba mają
+      # na razie Xcode 26.x. Nadpisujemy target tylko na CI (plik projektu
+      # zostaje bez zmian). Jeśli kod użyje API z iOS 27, build się wywali -
+      # wtedy trzeba poczekać na Xcode 27 na runnerach.
+      - name: Build
+        run: |
+          xcodebuild build \
+            -project Lingo.xcodeproj \
+            -scheme Lingo \
+            -destination 'platform=iOS Simulator,name=iPhone 17' \
+            IPHONEOS_DEPLOYMENT_TARGET=26.0 \
+            CODE_SIGNING_ALLOWED=NO
+
+      # Projekt nie ma jeszcze targetu testowego. Po dodaniu go w Xcode
+      # (File > New > Target > Unit Testing Bundle) odkomentuj ten krok.
+      # - name: Testy
+      #   run: |
+      #     xcodebuild test \
+      #       -project Lingo.xcodeproj \
+      #       -scheme Lingo \
+      #       -destination 'platform=iOS Simulator,name=iPhone 17' \
+      #       IPHONEOS_DEPLOYMENT_TARGET=26.0 \
+      #       CODE_SIGNING_ALLOWED=NO
