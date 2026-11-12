@@ -16,11 +16,18 @@ jobs:
       - name: Wybierz Xcode
         run: sudo xcode-select -s /Applications/Xcode_26.6.app
 
-      # Projekt jest zapisany w formacie Xcode 27 (objectVersion = 110), którego
-      # Xcode 26.x nie otworzy. Obniżamy wersję formatu tylko w kopii na runnerze.
+      # Projekt jest zapisany w Xcode 27: format pliku (objectVersion = 110) i
+      # iOS 27.0 jako minimalna wersja. Runnery mają na razie Xcode 26.x i
+      # symulatory iOS 26.x, więc obniżamy oba ustawienia tylko w kopii na
+      # runnerze (plik w repozytorium zostaje bez zmian).
       # Do usunięcia, gdy runnery dostaną Xcode 27.
-      - name: Obniż format projektu do Xcode 26
-        run: sed -i '' 's/objectVersion = 110;/objectVersion = 77;/' Lingo.xcodeproj/project.pbxproj
+      - name: Dostosuj projekt do Xcode 26
+        run: |
+          sed -i '' \
+            -e 's/objectVersion = 110;/objectVersion = 77;/' \
+            -e 's/IPHONEOS_DEPLOYMENT_TARGET = 27.0;/IPHONEOS_DEPLOYMENT_TARGET = 26.0;/' \
+            Lingo.xcodeproj/project.pbxproj
+          grep -nE "objectVersion|IPHONEOS_DEPLOYMENT_TARGET" Lingo.xcodeproj/project.pbxproj
 
       - name: Informacje o środowisku
         run: |
@@ -28,17 +35,14 @@ jobs:
           xcodebuild -list -project Lingo.xcodeproj
           xcrun simctl list devices available
 
-      # Projekt ma IPHONEOS_DEPLOYMENT_TARGET = 27.0, a runnery GitHuba mają
-      # na razie Xcode 26.x. Nadpisujemy target tylko na CI (plik projektu
-      # zostaje bez zmian). Jeśli kod użyje API z iOS 27, build się wywali -
-      # wtedy trzeba poczekać na Xcode 27 na runnerach.
+      # Jeśli kod użyje API z iOS 27, build się wywali - wtedy trzeba
+      # poczekać na Xcode 27 na runnerach.
       - name: Build
         run: |
           xcodebuild build \
             -project Lingo.xcodeproj \
             -scheme Lingo \
             -destination 'platform=iOS Simulator,name=iPhone 17' \
-            IPHONEOS_DEPLOYMENT_TARGET=26.0 \
             CODE_SIGNING_ALLOWED=NO
 
       # Projekt nie ma jeszcze targetu testowego. Po dodaniu go w Xcode
@@ -49,5 +53,4 @@ jobs:
       #       -project Lingo.xcodeproj \
       #       -scheme Lingo \
       #       -destination 'platform=iOS Simulator,name=iPhone 17' \
-      #       IPHONEOS_DEPLOYMENT_TARGET=26.0 \
       #       CODE_SIGNING_ALLOWED=NO
