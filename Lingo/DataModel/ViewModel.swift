@@ -1,4 +1,4 @@
-import Foundation
+import SwiftUI
 
 class ContentViewModel: ObservableObject {
     // published aby samo sie odswiezylo po zaladowaniu danych
