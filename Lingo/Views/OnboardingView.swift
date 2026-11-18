@@ -39,7 +39,7 @@ struct OnboardingView: View {
             Spacer(minLength: 24)
 
             VStack(spacing: 12) {
-                Button("Zaczynij naukę", action: onStart)
+                Button("Zacznij naukę", action: onStart)
                     .buttonStyle(PrimaryButtonStyle())
                 // Logowanie jest poza zakresem projektu – przycisk bez akcji.
                 Button("Mam już konto") {}
