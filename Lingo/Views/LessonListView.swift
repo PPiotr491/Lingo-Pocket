@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Ekran 03 – Lista lekcji w wybranej kategorii.
 struct LessonListView: View {
-    let category: Category
+    let category: CategoryView
 
     var body: some View {
         // TODO - filtry poziomu, postęp i wiersze lekcji (ekran 03 z makiety)
@@ -24,6 +24,6 @@ struct LessonListView: View {
 
 #Preview {
     NavigationStack {
-        LessonListView(category: Category.samples[0])
+        LessonListView(category: CategoryView.samples[0])
     }
 }

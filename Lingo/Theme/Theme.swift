@@ -15,7 +15,7 @@ extension Color {
     static let lingoAccentSoft = Color(hex: 0xEEF2FD)
     static let lingoTextPrimary = Color(hex: 0x14192B)
     static let lingoTextSecondary = Color(hex: 0x5B6478)
-    static let lingoBackground = Color(hex: 0xF5F7FC)
+    static let lingoBackground = Color(hex: 0xdceaf2)
     static let lingoSurface = Color.white
     static let lingoAccentText = Color(hex: 0x2549C7)
     /// Seria dni: tło pigułki i tekst (bursztyn).

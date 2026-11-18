@@ -1,7 +1,7 @@
 import Foundation
 
 /// Kategoria tematyczna lekcji (np. Jedzenie).
-struct Category: Identifiable, Hashable {
+struct CategoryView: Identifiable, Hashable {
     let id: String
     let name: String
     let imageName: String
@@ -19,9 +19,9 @@ struct Category: Identifiable, Hashable {
     }
 }
 
-extension Category {
+extension CategoryView {
     // TODO - pozostałe kategorie (Podróże, Zwierzęta, Dom) po dodaniu img-03…img-05
-    static let samples: [Category] = [
-        Category(id: "food", name: "Jedzenie", imageName: "img-02", lessonCount: 24)
+    static let samples: [CategoryView] = [
+        CategoryView(id: "food", name: "Jedzenie", imageName: "img-02", lessonCount: 24)
     ]
 }

@@ -5,7 +5,7 @@ struct HomeView: View {
     // TODO - podmienić na prawdziwe dane użytkownika
     var username: String = "Username"
     var streakDays: Int = 0
-    var categories: [Category] = Category.samples
+    var categories: [CategoryView] = CategoryView.samples
 
     private let gridColumns = [
         GridItem(.flexible(), spacing: 16),
@@ -101,7 +101,7 @@ struct HomeView: View {
 
 /// Kafelek kategorii: zdjęcie + nazwa + liczba lekcji.
 struct CategoryTile: View {
-    let category: Category
+    let category: CategoryView
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {

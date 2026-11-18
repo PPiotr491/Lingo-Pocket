@@ -1,6 +1,7 @@
 import SwiftUI
+import Combine
 
-class ContentViewModel: ObservableObject {
+class ContentViewModel {
     // published aby samo sie odswiezylo po zaladowaniu danych
     @Published var categories: [Category] = []
     

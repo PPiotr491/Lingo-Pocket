@@ -24,7 +24,7 @@ struct FlashcardsView: View {
             ZStack {
                 RoundedRectangle(cornerRadius: 24)
                     .fill(Color.white)
-                    .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: 5)
+                    .shadow(color: Color.lingoCardShadow.opacity(0.8), radius: 10, x: 0, y: 5)
                 
                 if isFlipped {
                     Text(currentWord.translation)
@@ -101,7 +101,7 @@ struct FlashcardsView: View {
             }
             .padding(.horizontal)
             .padding(.bottom)
-        }
+        }.background(Color.lingoBackground)
     }
     
     private func playAudio() {

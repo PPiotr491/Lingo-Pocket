@@ -12,7 +12,7 @@ struct ContentView: View {
 
     enum Route: Hashable {
         case home
-        case lessons(Category)
+        case lessons(CategoryView)
     }
 
     var body: some View {
