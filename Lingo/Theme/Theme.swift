@@ -16,6 +16,19 @@ extension Color {
     static let lingoTextPrimary = Color(hex: 0x14192B)
     static let lingoTextSecondary = Color(hex: 0x5B6478)
     static let lingoBackground = Color(hex: 0xF5F7FC)
+    static let lingoSurface = Color.white
+    static let lingoAccentText = Color(hex: 0x2549C7)
+    /// Seria dni: tło pigułki i tekst (bursztyn).
+    static let lingoWarningSoft = Color(hex: 0xFFF4DC)
+    static let lingoWarningText = Color(hex: 0x8A5300)
+    static let lingoCardShadow = Color(hex: 0x14192B).opacity(0.08)
+}
+
+extension View {
+    /// Cień karty z makiety (Shadow/Card: 0, 2, blur 12, #14192B 8%).
+    func lingoCardShadow() -> some View {
+        shadow(color: .lingoCardShadow, radius: 6, x: 0, y: 2)
+    }
 }
 
 /// Przycisk główny: biały tekst na niebieskim tle.

@@ -12,6 +12,7 @@ struct ContentView: View {
 
     enum Route: Hashable {
         case home
+        case lessons(Category)
     }
 
     var body: some View {
@@ -22,7 +23,9 @@ struct ContentView: View {
             .navigationDestination(for: Route.self) { route in
                 switch route {
                 case .home:
-                    MainView()
+                    HomeView()
+                case .lessons(let category):
+                    LessonListView(category: category)
                 }
             }
         }
