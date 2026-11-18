@@ -1,0 +1,38 @@
+[
+  {
+    "id": "cat_1",
+    "title": "Jedzenie",
+    "imageName": "img-02",
+    "lessons": [
+      {
+        "id": "les_1",
+        "title": "Śniadanie",
+        "level": "A1",
+        "durationMinutes": 5,
+        "words": [
+          {
+            "id": "word_1",
+            "englishTerm": "apple",
+            "transcription": "/ˈæp.əl/",
+            "translation": "jabłko",
+            "imageName": "img-11",
+            "audioName": "apple"
+          }
+        ]
+      },
+      {
+        "id": "les_2",
+        "title": "W kawiarni",
+        "level": "A1",
+        "durationMinutes": 6,
+        "words": []
+      }
+    ]
+  },
+  {
+    "id": "cat_2",
+    "title": "Podróże",
+    "imageName": "img-03",
+    "lessons": []
+  }
+]
