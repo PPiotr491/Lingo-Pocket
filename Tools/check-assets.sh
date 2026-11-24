@@ -34,5 +34,10 @@ for c in $(find "$CAT" -name Contents.json); do
   grep -q provides-namespace "$c" && bad "provides-namespace in $c"
 done
 
+# 4. every video fileName in data.json has Lingo/Media/<name>.mp4
+for v in $(grep -o '"fileName" *: *"[^"]*"' Lingo/DataModel/data.json | sed 's/.*: *"\(.*\)"/\1/'); do
+  [ -f "Lingo/Media/$v.mp4" ] || bad "missing video Lingo/Media/$v.mp4"
+done
+
 [ $fail -eq 0 ] && echo "ALL PASSED"
 exit $fail
