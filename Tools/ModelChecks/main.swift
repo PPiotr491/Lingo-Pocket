@@ -66,6 +66,7 @@ check(lesson(words: 22).newWordsText == "22 nowe słówka")
 check(formattedVideoDuration(10.01) == "0:10")
 check(formattedVideoDuration(165) == "2:45")
 check(formattedVideoDuration(59.9) == "0:59")
+check(formattedVideoDuration(.nan) == "0:00")
 
 // z data.json
 let cafe = cats[0].lessons[1]

@@ -44,6 +44,7 @@ struct VideoLessonView: View {
             }
             .padding(.horizontal, 16)
             .padding(.top, 8)
+            .padding(.bottom, 8)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.lingoBackground.ignoresSafeArea())
@@ -183,6 +184,8 @@ private struct LessonVideoPlayer: UIViewControllerRepresentable {
         captionHost.view.backgroundColor = .clear
         captionHost.view.isUserInteractionEnabled = false
         captionHost.view.translatesAutoresizingMaskIntoConstraints = false
+        // contentOverlayView powstaje razem z widokiem kontrolera.
+        controller.loadViewIfNeeded()
         if let overlay = controller.contentOverlayView {
             overlay.addSubview(captionHost.view)
             NSLayoutConstraint.activate([
@@ -281,9 +284,12 @@ private struct LessonVideoPlayer: UIViewControllerRepresentable {
             MainActor.assumeIsolated {
                 let fullScreen = self.fullScreen
                 fullScreen.isActive = true
+                // W pełnym ekranie cały obraz bez przycinania.
+                playerViewController.videoGravity = .resizeAspect
                 _ = coordinator.animate(alongsideTransition: nil) { context in
                     if context.isCancelled {
                         fullScreen.isActive = false
+                        playerViewController.videoGravity = .resizeAspectFill
                     }
                 }
             }
@@ -300,6 +306,8 @@ private struct LessonVideoPlayer: UIViewControllerRepresentable {
                 _ = coordinator.animate(alongsideTransition: nil) { context in
                     if !context.isCancelled {
                         fullScreen.isActive = false
+                        // Z powrotem w ramce: obraz wypełnia ją z przycięciem.
+                        playerViewController.videoGravity = .resizeAspectFill
                     }
                 }
             }
@@ -326,7 +334,8 @@ private struct LessonVideoPlayer: UIViewControllerRepresentable {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
             .padding(.horizontal, 16)
-            .padding(.bottom, 12)
+            // Odstęp 52 nad dolną krawędzią, żeby napis nie chował się pod systemowymi kontrolkami.
+            .padding(.bottom, 52)
             .animation(.easeInOut(duration: 0.2), value: text)
         }
     }

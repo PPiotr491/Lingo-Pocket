@@ -4,7 +4,7 @@
 
 **Goal:** Dodać niepodłączony ekran `VideoLessonView` dla lekcji „W kawiarni”: systemowy odtwarzacz z przyciętym obrazem, napisy EN/PL/Wyłącz z `data.json`, opis lekcji i przycisk quizu.
 
-**Architecture:** Model (Foundation, testowalny na Windowsie) dostaje `VideoContent` przy `Lesson` i czyste funkcje: wybór napisu dla chwili i języka, odmianę „słówek”, format czasu. Widok trzyma `AVPlayer`, obserwuje czas i podaje bieżący napis do `AVPlayerViewController` (przez `UIViewControllerRepresentable`, `videoGravity = .resizeAspectFill`), który nakłada go w `contentOverlayView`, więc napisy są widoczne także w pełnym ekranie.
+**Architecture:** Model (Foundation, testowalny na Windowsie) dostaje `VideoContent` przy `Lesson` i czyste funkcje: wybór napisu dla chwili i języka, odmianę „słówek”, format czasu. Widok trzyma `AVPlayer` i podaje go razem z filmem i językiem do `AVPlayerViewController` (przez `UIViewControllerRepresentable`, `videoGravity = .resizeAspectFill`, w pełnym ekranie `.resizeAspect`). Koordynator odtwarzacza ma własny `addPeriodicTimeObserver` i sam podmienia `captionHost.rootView` w `contentOverlayView`, więc napisy odświeżają się także w pełnym ekranie.
 
 **Tech Stack:** SwiftUI, AVKit/AVFoundation, Foundation (JSONDecoder). Weryfikacja na Windowsie: `swiftc` i Git Bash.
 
@@ -24,7 +24,7 @@
 1. Brak pliku filmu w paczce → zamiast odtwarzacza komunikat „Nie znaleziono filmu.”, bez crasha. Task 2, krok przeglądu, oraz `check-assets.sh` w Task 1 (plik z `data.json` musi istnieć).
 2. Lekcja bez wideo (`video == nil`) → komunikat „Ta lekcja nie ma jeszcze wideo.”, bez crasha. Task 2, krok przeglądu.
 3. Granice czasu napisów: chwila równa końcowi jednej kwestii i początkowi następnej, czas przed pierwszą i po ostatniej kwestii. Test w Task 1.
-4. Wyjście z ekranu w trakcie odtwarzania → odtwarzanie zatrzymane, obserwator czasu usunięty. Task 2, krok przeglądu.
+4. Wyjście z ekranu w trakcie odtwarzania → odtwarzanie zatrzymane (`onDisappear`, pominięte w pełnym ekranie), obserwator czasu usunięty w `dismantleUIViewController`. Wejście w pełny ekran i wyjście z niego nie pauzują i nie usuwają obserwatora. Task 2, krok przeglądu.
 5. Zmiana języka w trakcie odtwarzania działa od razu, a „Wyłącz” chowa napis. Test w Task 1 (funkcja), Task 2 (napis liczony z bieżącego języka, nie zapamiętany).
 
 ---
@@ -137,7 +137,7 @@ VideoLessonView jako „ekran” (słowo projektu: komentarze „Ekran 0X”, ws
 - [ ] **Kolor i odstępy przez `Theme.swift`.** Żadnego `Color.blue` ani `.gray`, odstępy na siatce 4 (projekt pisze 4, 8, 12, 16, 20, 24 w 3 plikach). Ozdobne elementy `.accessibilityHidden(true)`, jak w HomeView i Onboarding.
 - [ ] **Nie kopiować z HomeView:** powitania, pigułki serii, siatki kategorii, `.navigationBarBackButtonHidden(true)`, tła karty `lingoAccentSoft` z `continueCard`. **Z FlashcardsView:** ręcznie rysowanych przycisków, `Color.blue`/`.gray`, własnego cienia i własnego nagłówka zamiast paska nawigacji.
 
-Zachowanie (decyzje wykonawcy w ramach specu): `AVPlayer` tworzony raz na ekran (`@State`). Czas obserwowany przez `addPeriodicTimeObserver` co 0,1 s, a napis liczony w `body` z bieżącego czasu i języka. W `onDisappear` pauza i usunięcie obserwatora. Napis przekazywany do `AVPlayerViewController` przez `UIHostingController` w `contentOverlayView`, aktualizowany w `updateUIViewController`. Brak autoodtwarzania.
+Zachowanie (decyzje wykonawcy w ramach specu): `AVPlayer` tworzony raz na ekran (`@State`). Napis prowadzi koordynator `LessonVideoPlayer`: własny `addPeriodicTimeObserver` co 0,1 s, napis liczony z czasu odtwarzacza i bieżącego języka, `captionHost.rootView` (`UIHostingController` w `contentOverlayView`) podmieniany tylko przy zmianie kwestii, więc napisy odświeżają się także w pełnym ekranie. `updateUIViewController` przekazuje język i odtwarzacz i od razu odświeża napis (także w pauzie). Obserwator usuwany w `dismantleUIViewController` i przy zmianie odtwarzacza. `onDisappear` tylko pauzuje, z pominięciem w pełnym ekranie (flaga z delegata `AVPlayerViewControllerDelegate`). W pełnym ekranie `videoGravity = .resizeAspect`, po powrocie `.resizeAspectFill`. Brak autoodtwarzania.
 
 - [ ] **Step 1:** Przeczytaj listę kontrolną jeszcze raz przed pisaniem. Nie pracuj z pamięci.
 - [ ] **Step 2:** Dodaj `static let lingoCaptionBackground = Color.black.opacity(0.6)` w `Theme.swift`, z polskim komentarzem jak przy pozostałych kolorach.
@@ -147,7 +147,7 @@ Zachowanie (decyzje wykonawcy w ramach specu): `AVPlayer` tworzony raz na ekran 
 Run: `bash Tools/run-model-checks.sh && bash Tools/check-assets.sh && grep -nE "Color\.blue|\.gray|navigationBarBackButtonHidden|try!" Lingo/Views/VideoLessonView.swift; git diff --stat`
 Expected: dwa razy `ALL PASSED`, grep bez wyników, zmienione tylko pliki z listy Files.
 
-Przegląd (Review Focus 1, 2, 4): brak pliku i `video == nil` prowadzą do komunikatu, nie do force-unwrapa. `onDisappear` pauzuje i usuwa obserwatora.
+Przegląd (Review Focus 1, 2, 4): brak pliku i `video == nil` prowadzą do komunikatu, nie do force-unwrapa. `onDisappear` pauzuje (poza pełnym ekranem), a `dismantleUIViewController` usuwa obserwatora.
 
 - [ ] **Step 5: Commit**
 

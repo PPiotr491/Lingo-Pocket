@@ -90,6 +90,7 @@ extension Lesson {
 
 /// Czas filmu jako m:ss, z ucięciem ułamka sekundy.
 func formattedVideoDuration(_ seconds: Double) -> String {
+    guard seconds.isFinite else { return "0:00" }
     let total = max(0, Int(seconds))
     return String(format: "%d:%02d", total / 60, total % 60)
 }
