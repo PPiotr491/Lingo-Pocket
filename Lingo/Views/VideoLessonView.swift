@@ -11,10 +11,6 @@ struct VideoLessonView: View {
 
     /// Odtwarzacz tworzony raz na ekran (przy pierwszym pojawieniu się).
     @State private var player: AVPlayer?
-    /// Token obserwatora czasu, potrzebny do jego usunięcia.
-    @State private var timeObserver: Any?
-    /// Bieżąca chwila filmu w sekundach (odświeżana co 0,1 s).
-    @State private var currentTime: Double = 0
     /// Długość filmu wczytana z pliku; nil do czasu wczytania.
     @State private var videoDuration: Double?
     @State private var subtitleLanguage: SubtitleLanguage = .english
@@ -53,8 +49,8 @@ struct VideoLessonView: View {
         .background(Color.lingoBackground.ignoresSafeArea())
         .navigationTitle(lesson.title)
         .navigationBarTitleDisplayMode(.inline)
-        .onAppear(perform: startObservingTime)
-        .onDisappear(perform: stopPlayback)
+        .onAppear(perform: preparePlayer)
+        .onDisappear(perform: pausePlayback)
         .task { await loadVideoDuration() }
     }
 
@@ -68,7 +64,8 @@ struct VideoLessonView: View {
                 .overlay {
                     LessonVideoPlayer(
                         player: player,
-                        caption: video.subtitle(at: currentTime, language: subtitleLanguage),
+                        video: video,
+                        language: subtitleLanguage,
                         fullScreen: fullScreen
                     )
                 }
@@ -134,34 +131,17 @@ struct VideoLessonView: View {
 
     // MARK: - Odtwarzanie
 
-    /// Tworzy odtwarzacz (raz) i zaczyna śledzić czas co 0,1 s. Bez autoodtwarzania.
-    private func startObservingTime() {
-        guard let videoURL else { return }
-        let activePlayer = player ?? AVPlayer(url: videoURL)
-        if player == nil {
-            player = activePlayer
-        }
-        guard timeObserver == nil else { return }
-
-        let interval = CMTime(seconds: 0.1, preferredTimescale: 600)
-        timeObserver = activePlayer.addPeriodicTimeObserver(forInterval: interval, queue: .main) { time in
-            let seconds = time.seconds
-            // Obserwator działa na kolejce głównej, więc jesteśmy na MainActor.
-            MainActor.assumeIsolated {
-                currentTime = seconds
-            }
-        }
+    /// Tworzy odtwarzacz (raz). Bez autoodtwarzania; napisy śledzi koordynator odtwarzacza.
+    private func preparePlayer() {
+        guard player == nil, let videoURL else { return }
+        player = AVPlayer(url: videoURL)
     }
 
-    /// Po zejściu z ekranu: pauza i usunięcie obserwatora czasu.
-    private func stopPlayback() {
+    /// Po zejściu z ekranu: pauza. Obserwator czasu usuwa koordynator przy rozbiórce odtwarzacza.
+    private func pausePlayback() {
         // Pełny ekran zasłania ekran lekcji i może wywołać onDisappear, ale to nie jest wyjście z ekranu.
         guard !fullScreen.isActive else { return }
         player?.pause()
-        if let observer = timeObserver {
-            player?.removeTimeObserver(observer)
-            timeObserver = nil
-        }
     }
 
     /// Wczytuje długość filmu z pliku; nieznana lub nieskończona długość zostaje pominięta.
@@ -184,11 +164,12 @@ private final class PlayerFullScreenState {
 /// Systemowy odtwarzacz Apple: obraz wypełnia ramkę, napis nałożony na obraz (widoczny też w pełnym ekranie).
 private struct LessonVideoPlayer: UIViewControllerRepresentable {
     let player: AVPlayer?
-    let caption: String?
+    let video: VideoContent
+    let language: SubtitleLanguage
     let fullScreen: PlayerFullScreenState
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(fullScreen: fullScreen)
+        Coordinator(fullScreen: fullScreen, video: video, language: language)
     }
 
     func makeUIViewController(context: Context) -> AVPlayerViewController {
@@ -198,7 +179,7 @@ private struct LessonVideoPlayer: UIViewControllerRepresentable {
         controller.delegate = context.coordinator
 
         // Napis w contentOverlayView: między obrazem a kontrolkami, także w pełnym ekranie.
-        let captionHost = UIHostingController(rootView: Caption(text: caption))
+        let captionHost = UIHostingController(rootView: Caption(text: nil))
         captionHost.view.backgroundColor = .clear
         captionHost.view.isUserInteractionEnabled = false
         captionHost.view.translatesAutoresizingMaskIntoConstraints = false
@@ -212,6 +193,8 @@ private struct LessonVideoPlayer: UIViewControllerRepresentable {
             ])
         }
         context.coordinator.captionHost = captionHost
+        context.coordinator.observe(player)
+        context.coordinator.refreshCaption()
 
         return controller
     }
@@ -220,20 +203,73 @@ private struct LessonVideoPlayer: UIViewControllerRepresentable {
         if controller.player !== player {
             controller.player = player
         }
-        // Treść napisu podmieniana tylko przy zmianie kwestii, nie co 0,1 s.
-        if let captionHost = context.coordinator.captionHost, captionHost.rootView.text != caption {
-            captionHost.rootView = Caption(text: caption)
-        }
+        let coordinator = context.coordinator
+        coordinator.video = video
+        coordinator.language = language
+        coordinator.observe(player)
+        // Zmiana języka od razu, także w pauzie.
+        coordinator.refreshCaption()
     }
 
-    /// Trzyma kontroler napisu i śledzi pełny ekran jako delegat odtwarzacza.
+    static func dismantleUIViewController(_ controller: AVPlayerViewController, coordinator: Coordinator) {
+        coordinator.stopObserving()
+    }
+
+    /// Prowadzi napis według czasu odtwarzacza (niezależnie od odświeżania ekranu, więc też w pełnym ekranie)
+    /// i śledzi pełny ekran jako delegat odtwarzacza.
     final class Coordinator: NSObject, AVPlayerViewControllerDelegate {
         var captionHost: UIHostingController<Caption>?
         let fullScreen: PlayerFullScreenState
+        var video: VideoContent
+        var language: SubtitleLanguage
 
-        init(fullScreen: PlayerFullScreenState) {
+        /// Odtwarzacz, na którym wisi obserwator; potrzebny do usunięcia obserwatora.
+        private var observedPlayer: AVPlayer?
+        private var timeObserver: Any?
+
+        init(fullScreen: PlayerFullScreenState, video: VideoContent, language: SubtitleLanguage) {
             self.fullScreen = fullScreen
+            self.video = video
+            self.language = language
             super.init()
+        }
+
+        /// Obserwuje czas podanego odtwarzacza co 0,1 s; przy zmianie odtwarzacza zdejmuje stary obserwator.
+        func observe(_ player: AVPlayer?) {
+            guard player !== observedPlayer else { return }
+            stopObserving()
+            guard let player else { return }
+
+            observedPlayer = player
+            let interval = CMTime(seconds: 0.1, preferredTimescale: 600)
+            timeObserver = player.addPeriodicTimeObserver(forInterval: interval, queue: .main) { [weak self] time in
+                guard let self else { return }
+                let seconds = time.seconds
+                // Obserwator działa na kolejce głównej, więc jesteśmy na MainActor.
+                MainActor.assumeIsolated {
+                    self.showCaption(at: seconds)
+                }
+            }
+        }
+
+        func stopObserving() {
+            if let observer = timeObserver {
+                observedPlayer?.removeTimeObserver(observer)
+            }
+            timeObserver = nil
+            observedPlayer = nil
+        }
+
+        /// Napis dla bieżącej chwili odtwarzacza (np. po zmianie języka w pauzie).
+        func refreshCaption() {
+            showCaption(at: observedPlayer?.currentTime().seconds ?? 0)
+        }
+
+        /// Podmienia napis tylko przy zmianie kwestii; przenikanie 0,2 s robi widok `Caption`.
+        private func showCaption(at seconds: Double) {
+            let text = seconds.isFinite ? video.subtitle(at: seconds, language: language) : nil
+            guard let captionHost, captionHost.rootView.text != text else { return }
+            captionHost.rootView = Caption(text: text)
         }
 
         // Pełny ekran od początku przejścia; przerwane przejście cofa stan.
