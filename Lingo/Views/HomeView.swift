@@ -5,7 +5,7 @@ struct HomeView: View {
     // TODO - podmienić na prawdziwe dane użytkownika
     var username: String = "Username"
     var streakDays: Int = 0
-    var categories: [CategoryView] = CategoryView.samples
+    var categories: [Category]
 
     private let gridColumns = [
         GridItem(.flexible(), spacing: 16),
@@ -101,7 +101,7 @@ struct HomeView: View {
 
 /// Kafelek kategorii: zdjęcie + nazwa + liczba lekcji.
 struct CategoryTile: View {
-    let category: CategoryView
+    let category: Category
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -116,7 +116,7 @@ struct CategoryTile: View {
                 .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: 4) {
-                Text(category.name)
+                Text(category.title)
                     .font(.system(size: 17, weight: .semibold))
                     .foregroundStyle(Color.lingoTextPrimary)
                 Text(category.lessonCountText)
@@ -137,7 +137,7 @@ struct CategoryTile: View {
 
 #Preview {
     NavigationStack {
-        HomeView(streakDays: 7)
+        HomeView(streakDays: 7, categories: ContentViewModel().categories)
             .navigationDestination(for: ContentView.Route.self) { route in
                 if case .lessons(let category) = route {
                     LessonListView(category: category)

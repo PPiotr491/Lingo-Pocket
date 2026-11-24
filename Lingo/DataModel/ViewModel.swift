@@ -1,9 +1,10 @@
 import SwiftUI
-import Combine
+import Observation
 
-class ContentViewModel {
-    // published aby samo sie odswiezylo po zaladowaniu danych
-    @Published var categories: [Category] = []
+@Observable
+final class ContentViewModel {
+    // @Observable aby widok sam sie odswiezyl po zaladowaniu danych
+    var categories: [Category] = []
     
     init() {
         loadData()
