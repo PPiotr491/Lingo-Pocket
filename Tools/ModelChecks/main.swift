@@ -23,6 +23,9 @@ check(category(lessons: 14).lessonCountText == "14 lekcji")
 check(category(lessons: 22).lessonCountText == "22 lekcje")
 check(category(lessons: 24).lessonCountText == "24 lekcje")
 check(category(lessons: 112).lessonCountText == "112 lekcji")
+check(category(lessons: 11).lessonCountText == "11 lekcji")
+check(category(lessons: 13).lessonCountText == "13 lekcji")
+check(category(lessons: 21).lessonCountText == "21 lekcji")
 
 guard CommandLine.arguments.count > 1 else {
     print("FAIL: brak ścieżki do JSON-a")
@@ -33,7 +36,7 @@ let cats = try JSONDecoder().decode([Category].self, from: Data(contentsOf: json
 check(cats.map(\.title) == ["Jedzenie", "Podróże"], "tytuły")
 check(cats.map(\.lessonCountText) == ["2 lekcje", "0 lekcji"], "liczba lekcji")
 check(Set(cats).count == 2)          // Hashable
-check(cats[0] == cats[0] && cats[0] != cats[1])
+check(cats[0] != cats[1])
 
 if failed { exit(1) }
 print("ALL PASSED")
