@@ -2,7 +2,7 @@
   {
     "id": "cat_1",
     "title": "Jedzenie",
-    "imageName": "img-02",
+    "imageName": "category-food",
     "lessons": [
       {
         "id": "les_1",
@@ -15,7 +15,7 @@
             "englishTerm": "apple",
             "transcription": "/ˈæp.əl/",
             "translation": "jabłko",
-            "imageName": "img-11",
+            "imageName": "word-apple",
             "audioName": "apple"
           }
         ]
@@ -32,7 +32,7 @@
   {
     "id": "cat_2",
     "title": "Podróże",
-    "imageName": "img-03",
+    "imageName": "category-travel",
     "lessons": []
   }
 ]

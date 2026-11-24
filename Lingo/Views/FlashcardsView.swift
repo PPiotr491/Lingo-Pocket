@@ -120,5 +120,5 @@ struct FlashcardsView: View {
 }
 
 #Preview {
-    FlashcardsView(currentWord: Word(id: "test_1", englishTerm: "apple", transcription: "/ˈæp.əl/", translation: "jabłko", imageName: "img-11", audioName: "apple"))
+    FlashcardsView(currentWord: Word(id: "test_1", englishTerm: "apple", transcription: "/ˈæp.əl/", translation: "jabłko", imageName: "word-apple", audioName: "apple"))
 }
