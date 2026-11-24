@@ -18,6 +18,8 @@ struct VideoLessonView: View {
     /// Długość filmu wczytana z pliku; nil do czasu wczytania.
     @State private var videoDuration: Double?
     @State private var subtitleLanguage: SubtitleLanguage = .english
+    /// Czy odtwarzacz jest w pełnym ekranie (ustawia delegat odtwarzacza).
+    @State private var fullScreen = PlayerFullScreenState()
 
     init(lesson: Lesson) {
         self.lesson = lesson
@@ -66,7 +68,8 @@ struct VideoLessonView: View {
                 .overlay {
                     LessonVideoPlayer(
                         player: player,
-                        caption: video.subtitle(at: currentTime, language: subtitleLanguage)
+                        caption: video.subtitle(at: currentTime, language: subtitleLanguage),
+                        fullScreen: fullScreen
                     )
                 }
                 .clipShape(RoundedRectangle(cornerRadius: 16))
@@ -152,6 +155,8 @@ struct VideoLessonView: View {
 
     /// Po zejściu z ekranu: pauza i usunięcie obserwatora czasu.
     private func stopPlayback() {
+        // Pełny ekran zasłania ekran lekcji i może wywołać onDisappear, ale to nie jest wyjście z ekranu.
+        guard !fullScreen.isActive else { return }
         player?.pause()
         if let observer = timeObserver {
             player?.removeTimeObserver(observer)
@@ -171,19 +176,26 @@ struct VideoLessonView: View {
     }
 }
 
+/// Stan pełnego ekranu współdzielony przez ekran i delegata odtwarzacza (zmiana nie przerysowuje widoku).
+private final class PlayerFullScreenState {
+    var isActive = false
+}
+
 /// Systemowy odtwarzacz Apple: obraz wypełnia ramkę, napis nałożony na obraz (widoczny też w pełnym ekranie).
 private struct LessonVideoPlayer: UIViewControllerRepresentable {
     let player: AVPlayer?
     let caption: String?
+    let fullScreen: PlayerFullScreenState
 
     func makeCoordinator() -> Coordinator {
-        Coordinator()
+        Coordinator(fullScreen: fullScreen)
     }
 
     func makeUIViewController(context: Context) -> AVPlayerViewController {
         let controller = AVPlayerViewController()
         controller.player = player
         controller.videoGravity = .resizeAspectFill
+        controller.delegate = context.coordinator
 
         // Napis w contentOverlayView: między obrazem a kontrolkami, także w pełnym ekranie.
         let captionHost = UIHostingController(rootView: Caption(text: caption))
@@ -208,12 +220,54 @@ private struct LessonVideoPlayer: UIViewControllerRepresentable {
         if controller.player !== player {
             controller.player = player
         }
-        context.coordinator.captionHost?.rootView = Caption(text: caption)
+        // Treść napisu podmieniana tylko przy zmianie kwestii, nie co 0,1 s.
+        if let captionHost = context.coordinator.captionHost, captionHost.rootView.text != caption {
+            captionHost.rootView = Caption(text: caption)
+        }
     }
 
-    /// Trzyma kontroler napisu, żeby podmieniać jego treść przy każdej aktualizacji.
-    final class Coordinator {
+    /// Trzyma kontroler napisu i śledzi pełny ekran jako delegat odtwarzacza.
+    final class Coordinator: NSObject, AVPlayerViewControllerDelegate {
         var captionHost: UIHostingController<Caption>?
+        let fullScreen: PlayerFullScreenState
+
+        init(fullScreen: PlayerFullScreenState) {
+            self.fullScreen = fullScreen
+            super.init()
+        }
+
+        // Pełny ekran od początku przejścia; przerwane przejście cofa stan.
+        nonisolated func playerViewController(
+            _ playerViewController: AVPlayerViewController,
+            willBeginFullScreenPresentationWithAnimationCoordinator coordinator: any UIViewControllerTransitionCoordinator
+        ) {
+            // Delegat jest wywoływany na wątku głównym.
+            MainActor.assumeIsolated {
+                let fullScreen = self.fullScreen
+                fullScreen.isActive = true
+                _ = coordinator.animate(alongsideTransition: nil) { context in
+                    if context.isCancelled {
+                        fullScreen.isActive = false
+                    }
+                }
+            }
+        }
+
+        // Koniec pełnego ekranu dopiero po zakończonym przejściu; przerwane zostawia pełny ekran.
+        nonisolated func playerViewController(
+            _ playerViewController: AVPlayerViewController,
+            willEndFullScreenPresentationWithAnimationCoordinator coordinator: any UIViewControllerTransitionCoordinator
+        ) {
+            // Delegat jest wywoływany na wątku głównym.
+            MainActor.assumeIsolated {
+                let fullScreen = self.fullScreen
+                _ = coordinator.animate(alongsideTransition: nil) { context in
+                    if !context.isCancelled {
+                        fullScreen.isActive = false
+                    }
+                }
+            }
+        }
     }
 
     /// Napis przy dolnej krawędzi obrazu; zmiana kwestii z przenikaniem 0,2 s.
@@ -265,8 +319,20 @@ private struct SubtitlePicker: View {
                         .background(isSelected ? Color.lingoAccent : Color.lingoAccentSoft, in: Capsule())
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel(language.accessibilityName)
                 .accessibilityAddTraits(isSelected ? .isSelected : [])
             }
+        }
+    }
+}
+
+private extension SubtitleLanguage {
+    /// Pełna nazwa dla VoiceOver zamiast skrótu z pigułki.
+    var accessibilityName: String {
+        switch self {
+        case .english: return "Napisy angielskie"
+        case .polish: return "Napisy polskie"
+        case .off: return "Napisy wyłączone"
         }
     }
 }
