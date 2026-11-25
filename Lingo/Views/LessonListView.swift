@@ -22,6 +22,41 @@ struct LessonListView: View {
     }
 }
 
+//struct LessonTile: View {
+//    let lesson: Lesson
+//
+//    var body: some View {
+//        VStack(alignment: .leading, spacing: 0) {
+//            Color.clear
+//                .frame(height: 112)
+//                .overlay(
+//                    Image(lesson.imageName)
+//                        .resizable()
+//                        .scaledToFill()
+//                )
+//                .clipped()
+//                .accessibilityHidden(true)
+//
+//            VStack(alignment: .leading, spacing: 4) {
+//                Text(category.title)
+//                    .font(.system(size: 17, weight: .semibold))
+//                    .foregroundStyle(Color.lingoTextPrimary)
+//                Text(category.lessonCountText)
+//                    .font(.system(size: 13))
+//                    .foregroundStyle(Color.lingoTextSecondary)
+//            }
+//            .padding(12)
+//            .frame(maxWidth: .infinity, alignment: .leading)
+//        }
+//        .background(Color.lingoSurface)
+//        .clipShape(RoundedRectangle(cornerRadius: 16))
+//        .lingoCardShadow()
+//        .contentShape(RoundedRectangle(cornerRadius: 16))
+//        .accessibilityElement(children: .combine)
+//        .accessibilityAddTraits(.isButton)
+//    }
+//}
+
 #Preview {
     NavigationStack {
         LessonListView(category: ContentViewModel().categories[0])

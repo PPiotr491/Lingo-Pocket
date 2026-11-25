@@ -34,10 +34,10 @@ struct QuizView: View {
     let questionTerm = "cheese"
     let correctTranslation = "ser"
     let options: [QuizOption] = [
-        QuizOption(word: "bread", translation: "chleb", imageName: "img-14", isCorrect: false),
-        QuizOption(word: "cheese", translation: "ser", imageName: "img-13", isCorrect: true),
-        QuizOption(word: "banana", translation: "banan", imageName: "img-15", isCorrect: false),
-        QuizOption(word: "tomato", translation: "pomidor", imageName: "img-16", isCorrect: false)
+        QuizOption(word: "bread", translation: "chleb", imageName: "quiz-bread", isCorrect: false),
+        QuizOption(word: "cheese", translation: "ser", imageName: "quiz-cheese", isCorrect: true),
+        QuizOption(word: "banana", translation: "banan", imageName: "quiz-banana", isCorrect: false),
+        QuizOption(word: "tomato", translation: "pomidor", imageName: "quiz-tomato", isCorrect: false)
     ]
     
     let columns = [
