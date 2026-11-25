@@ -13,7 +13,7 @@ struct OnboardingView: View {
             logo
                 .padding(.top, 8)
 
-            Image("img-01")
+            Image("onboarding-hero")
                 .resizable()
                 .scaledToFit()
                 .clipShape(RoundedRectangle(cornerRadius: 24))

@@ -9,10 +9,11 @@ import SwiftUI
 
 struct ContentView: View {
     @State private var path: [Route] = []
+    @State private var viewModel = ContentViewModel()
 
     enum Route: Hashable {
         case home
-        case lessons(CategoryView)
+        case lessons(Category)
     }
 
     var body: some View {
@@ -23,7 +24,7 @@ struct ContentView: View {
             .navigationDestination(for: Route.self) { route in
                 switch route {
                 case .home:
-                    HomeView()
+                    HomeView(categories: viewModel.categories)
                 case .lessons(let category):
                     LessonListView(category: category)
                 }

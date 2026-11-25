@@ -22,6 +22,8 @@ extension Color {
     static let lingoWarningSoft = Color(hex: 0xFFF4DC)
     static let lingoWarningText = Color(hex: 0x8A5300)
     static let lingoCardShadow = Color(hex: 0x14192B).opacity(0.08)
+    /// Tło napisu na filmie: półprzezroczysta czerń pod białym tekstem.
+    static let lingoCaptionBackground = Color.black.opacity(0.6)
 }
 
 extension View {

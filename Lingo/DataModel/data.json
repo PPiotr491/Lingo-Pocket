@@ -2,7 +2,7 @@
   {
     "id": "cat_1",
     "title": "Jedzenie",
-    "imageName": "img-02",
+    "imageName": "category-food",
     "lessons": [
       {
         "id": "les_1",
@@ -15,7 +15,7 @@
             "englishTerm": "apple",
             "transcription": "/ˈæp.əl/",
             "translation": "jabłko",
-            "imageName": "img-11",
+            "imageName": "word-apple",
             "audioName": "apple"
           }
         ]
@@ -25,14 +25,24 @@
         "title": "W kawiarni",
         "level": "A1",
         "durationMinutes": 6,
-        "words": []
+        "words": [],
+        "video": {
+          "fileName": "cafe_lesson",
+          "title": "W kawiarni – zamawiamy kawę",
+          "description": "Nauczysz się zamawiać napoje i płacić w kawiarni. Zwróć uwagę na zwroty „Could I have…?” oraz „I'd like…”.",
+          "subtitles": [
+            { "start": 0.0, "end": 3.5, "en": "Could I have a coffee with milk, please?", "pl": "Poproszę kawę z mlekiem." },
+            { "start": 3.5, "end": 7.0, "en": "Sure. Anything else?", "pl": "Jasne. Coś jeszcze?" },
+            { "start": 7.0, "end": 10.0, "en": "No, thank you. How much is it?", "pl": "Nie, dziękuję. Ile płacę?" }
+          ]
+        }
       }
     ]
   },
   {
     "id": "cat_2",
     "title": "Podróże",
-    "imageName": "img-03",
+    "imageName": "category-travel",
     "lessons": []
   }
 ]
